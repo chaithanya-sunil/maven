@@ -1,0 +1,41 @@
+name: DevOps Maven CI Artifact Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+          cache-dependency-path: maven-automation-pipeline/pom.xml
+
+      - name: Compile Code Base
+        working-directory: maven-automation-pipeline
+        run: mvn clean compile
+
+      - name: Run Automated Test Suites
+        working-directory: maven-automation-pipeline
+        run: mvn test
+
+      - name: Package Executable Distribution
+        working-directory: maven-automation-pipeline
+        run: mvn package
+
+      - name: Upload Build Artifact for Verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-ready-jar
+          path: maven-automation-pipeline/target/*.jar
+          retention-days: 5
